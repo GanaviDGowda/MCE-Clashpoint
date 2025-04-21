@@ -4,7 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaTrash } from 'react-icons/fa'; // Import trash icon
 
 const EditEvent = () => {
-  const { eventId } = useParams(); // Get the event ID from the URL
+  // Change eventId to id for consistency
+  const { id } = useParams(); // Get the event ID from the URL
   const navigate = useNavigate();
 
   const [eventData, setEventData] = useState({
@@ -26,8 +27,18 @@ const EditEvent = () => {
   useEffect(() => {
     const fetchEventData = async () => {
       try {
-        const response = await api.get(`/events/${eventId}`);
-        setEventData(response.data);
+        console.log('Fetching event with ID:', id); // Changed from eventId to id
+        const response = await api.get(`/events/${id}`); // Changed from eventId to id
+        console.log('Event data received:', response.data);
+        
+        // Format the dates properly for the input fields
+        const formattedData = {
+          ...response.data,
+          date: response.data.date ? new Date(response.data.date).toISOString().split('T')[0] : '',
+          registrationEndDate: response.data.registrationEndDate ? new Date(response.data.registrationEndDate).toISOString().split('T')[0] : ''
+        };
+        
+        setEventData(formattedData);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching event details:', error);
@@ -36,23 +47,21 @@ const EditEvent = () => {
       }
     };
     fetchEventData();
-  }, [eventId]);
+  }, [id]); // Changed from eventId to id
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setEventData({ ...eventData, [name]: value });
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await api.put(`/events/${eventId}`, eventData);
+      const response = await api.put(`/events/${id}`, eventData); // Changed from eventId to id
       if (response.status === 200) {
         alert('Event updated successfully');
-        navigate('/some-route'); // Redirect to host dashboard after successful update
+        navigate('/host/dashboard'); 
       }
     } catch (error) {
       console.error('Error updating event:', error);
@@ -60,16 +69,15 @@ const EditEvent = () => {
     }
   };
 
-  // Handle delete
   const handleDelete = async () => {
     const confirmDelete = window.confirm('Are you sure you want to delete this event?');
     if (!confirmDelete) return;
 
     try {
-      const response = await api.delete(`/events/${eventId}`);
+      const response = await api.delete(`/events/${id}`); // Changed from eventId to id
       if (response.status === 200) {
         alert('Event deleted successfully');
-        navigate('/host/dashboard'); // Redirect after deletion
+        navigate('/host/dashboard');
       }
     } catch (error) {
       console.error('Error deleting event:', error);

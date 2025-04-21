@@ -1,5 +1,6 @@
 import { Event } from '../models/Event.js';
 import { Registration } from '../models/Registration.js';
+import mongoose from 'mongoose';
 
 // Create Event
 export const createEvent = async (req, res) => {
