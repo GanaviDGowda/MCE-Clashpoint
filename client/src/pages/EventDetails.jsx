@@ -4,30 +4,46 @@ import { useParams, Link } from 'react-router-dom';
 import { Button, Card, ListGroup, Badge } from 'react-bootstrap';
 
 const EventDetails = () => {
-  const { eventId } = useParams(); // Get event ID from the URL parameters
+  const { id } = useParams();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isRegistered, setIsRegistered] = useState(false);
   
-  // Fetch event details from the backend
   useEffect(() => {
     const fetchEventDetails = async () => {
       try {
-        const response = await api.get(`/events/${eventId}`);
+        // Debug: Log the exact URL being called
+        console.log('Fetching event from:', `/events/${id}`);
+        
+        const response = await api.get(`/events/${id}`);
+        console.log('Event response:', response.data);
         setEvent(response.data);
-        setLoading(false);
 
-        // Check if the student is already registered
-        const studentResponse = await api.get('/student/registration-status');
-        setIsRegistered(studentResponse.data.isRegistered);
+        // Check if the student is already registered for this specific event
+        try {
+          console.log('Fetching registrations');
+          const registrationsResponse = await api.get('/registrations');
+          console.log('Registrations response:', registrationsResponse.data);
+          
+          const registeredEvents = registrationsResponse.data;
+          const isAlreadyRegistered = registeredEvents.some(reg => 
+            reg.eventId && reg.eventId._id === id
+          );
+          setIsRegistered(isAlreadyRegistered);
+        } catch (regError) {
+          console.error('Error fetching registrations:', regError);
+          // Continue even if registration check fails
+        }
+        
+        setLoading(false);
       } catch (error) {
-        console.error('Error fetching event details:', error);
+        console.error('Error fetching event details:', error.response || error);
         setLoading(false);
       }
     };
     
     fetchEventDetails();
-  }, [eventId]);
+  }, [id]);
 
   if (loading) {
     return <div>Loading event details...</div>;
@@ -39,11 +55,13 @@ const EventDetails = () => {
 
   const handleRegister = async () => {
     try {
-      await api.post(`/student/register/${eventId}`);
+      console.log('Registering for event:', `/registrations/${id}`);
+      const response = await api.post(`/registrations/${id}`);
+      console.log('Registration response:', response.data);
       setIsRegistered(true);
       alert('Successfully registered for the event!');
     } catch (error) {
-      console.error('Error registering for event:', error);
+      console.error('Error registering for event:', error.response || error);
       alert('Failed to register for the event');
     }
   };
@@ -53,7 +71,7 @@ const EventDetails = () => {
       <Card className="shadow-lg">
         <Card.Img variant="top" src={event.banner || '/default-banner.jpg'} alt="Event Banner" />
         <Card.Body>
-          <Card.Title>{event.name}</Card.Title>
+          <Card.Title>{event.title}</Card.Title>
           <Card.Subtitle className="mb-2 text-muted">{event.category}</Card.Subtitle>
           <Card.Text>{event.description}</Card.Text>
           
@@ -101,7 +119,6 @@ const EventDetails = () => {
         </Card.Body>
       </Card>
 
-      {/* Navigation Links */}
       <div className="mt-4 text-center">
         <Link to="/student/dashboard" className="btn btn-outline-primary mx-2">
           Back to Dashboard

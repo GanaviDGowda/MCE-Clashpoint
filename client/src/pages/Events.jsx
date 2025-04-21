@@ -46,9 +46,9 @@ const Events = () => {
                   alt="Event Banner"
                 />
                 <Card.Body>
-                  <Card.Title>{event.name}</Card.Title>
+                  <Card.Title>{event.title}</Card.Title>
                   <Card.Text>{event.description?.slice(0, 100)}...</Card.Text>
-                  <Button variant="primary" as={Link} to={`/event/${event._id}`}>
+                  <Button variant="primary" as={Link} to={`/events/${event._id}`}>
                     View Details
                   </Button>
                 </Card.Body>

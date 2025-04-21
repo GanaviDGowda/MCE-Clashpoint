@@ -46,7 +46,7 @@ const AppRoutes = () => (
     {/* <Route path="/host/upload-report/:id" element={<ReportUploader />} /> */}
 
     {/* 404 Fallback */}
-    <Route path="*" element={<NotFound />} />
+    
   </Routes>
 );
 
