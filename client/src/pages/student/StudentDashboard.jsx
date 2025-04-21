@@ -47,7 +47,7 @@ const StudentDashboard = () => {
             <tbody>
               {events.map((event) => (
                 <tr key={event._id}>
-                  <td>{event.name}</td>
+                  <td>{event.title}</td>
                   <td>{new Date(event.date).toLocaleDateString()}</td>
                   <td>{event.attended ? 'Attended' : 'Not Attended'}</td>
                   <td>

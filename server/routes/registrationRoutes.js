@@ -1,15 +1,12 @@
-import express from "express";
-import {
-  registerForEvent
-} from "../controllers/registrationController.js";
-
-import { protect,studentOnly } from "../middlewares/authMiddleware.js";
-
+// server/routes/registrationRoutes.js
+import express from 'express';
+import { protect } from '../middlewares/authMiddleware.js';
+import { registerForEvent, getStudentRegistrations } from '../controllers/registrationController.js';
 
 const router = express.Router();
 
-// Student-only
-router.post("/", protect, studentOnly, registerForEvent);
-
+// Add your routes here
+router.post('/:eventId', protect, registerForEvent);
+router.get('/', protect, getStudentRegistrations);
 
 export default router;

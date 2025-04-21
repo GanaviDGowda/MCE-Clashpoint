@@ -55,7 +55,8 @@ const EventDetails = () => {
 
   const handleRegister = async () => {
     try {
-      console.log('Registering for event:', `/registrations/${id}`);
+      console.log('Registering for event:', id);
+      // Using eventId as URL parameter as configured in the route
       const response = await api.post(`/registrations/${id}`);
       console.log('Registration response:', response.data);
       setIsRegistered(true);
