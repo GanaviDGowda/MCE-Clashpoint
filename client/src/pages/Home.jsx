@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Link } from 'react-router-dom'; // 🔁 Added for navigation
 import './Home.css';
 import api from "../services/api";
 
@@ -58,7 +59,7 @@ const Home = () => {
         <Row className="justify-content-center text-center">
           {['Seminar', 'Workshop', 'Tech Events', 'Non-Tech Events'].map((cat, index) => (
             <Col xs={6} md={3} key={index} className="mb-4">
-              <Card className="category-card h-100 shadow-sm" >
+              <Card className="category-card h-100 shadow-sm">
                 <Card.Img
                   variant="top"
                   src={categoryImages[cat]}
@@ -94,22 +95,27 @@ const Home = () => {
         </Row>
       </Container>
 
-      {/* Explore Slider Section (Updated to fetch from backend) */}
+      {/* Explore Slider Section */}
       <Container fluid className="my-5 px-4">
         <h3 className="text-center mb-4">Explore</h3>
         <div className="explore-slider d-flex overflow-auto pb-3">
           {events.map((event) => (
-            <Card key={event._id} className="me-3 shadow-sm flex-shrink-0 explore-card">
-              <Card.Img
-                variant="top"
-                src={event.banner || eventLogo}
-                alt={event.name}
-              />
-              <Card.Body>
-                <Card.Title className="text-center">{event.
-title}</Card.Title>
-              </Card.Body>
-            </Card>
+            <Link
+              to={`/events/${event._id}`}
+              key={event._id}
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
+              <Card className="me-3 shadow-sm flex-shrink-0 explore-card">
+                <Card.Img
+                  variant="top"
+                  src={event.banner || eventLogo}
+                  alt={event.name}
+                />
+                <Card.Body>
+                  <Card.Title className="text-center">{event.title}</Card.Title>
+                </Card.Body>
+              </Card>
+            </Link>
           ))}
         </div>
       </Container>
