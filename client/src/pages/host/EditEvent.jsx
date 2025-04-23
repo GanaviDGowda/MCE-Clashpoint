@@ -9,7 +9,7 @@ const EditEvent = () => {
   const navigate = useNavigate();
 
   const [eventData, setEventData] = useState({
-    name: '',
+    title: '',
     description: '',
     category: '',
     date: '',
@@ -99,7 +99,7 @@ const EditEvent = () => {
             type="text"
             name="name"
             className="form-control"
-            value={eventData.name}
+            value={eventData.title}
             onChange={handleChange}
             required
           />
