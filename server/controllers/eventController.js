@@ -3,15 +3,26 @@ import { Registration } from '../models/Registration.js';
 import mongoose from 'mongoose';
 
 // Create Event
+// controllers/eventController.js
+
 export const createEvent = async (req, res) => {
   try {
-    const event = new Event({ ...req.body, createdBy: req.user.id });
+    const bannerUrl = req.file?.path || ''; // Path is set by Cloudinary storage
+
+    const event = new Event({
+      ...req.body,
+      banner: bannerUrl,
+      createdBy: req.user.id,
+    });
+
     await event.save();
     res.status(201).json(event);
   } catch (err) {
+    console.error('Error creating event:', err);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // Get All Events
 export const getAllEvents = async (req, res) => {
@@ -55,12 +66,24 @@ export const getEventById = async (req, res) => {
 // Update Event
 export const updateEvent = async (req, res) => {
   try {
+    // If there's a new banner file uploaded, use the new URL provided by Cloudinary.
+    if (req.file) {
+      req.body.banner = req.file.path; // Cloudinary will return the file URL after upload
+    }
+
+    // Find and update the event using its ID
     const updated = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // Delete Event
 export const deleteEvent = async (req, res) => {

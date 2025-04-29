@@ -1,4 +1,5 @@
 import express from "express";
+import upload from '../middlewares/uploadMiddleware.js';
 import mongoose from 'mongoose'; // Add this import
 import {
   createEvent,
@@ -34,7 +35,7 @@ router.get('/student', protect, getEventsByStudent);
 router.get("/:id", getEventById);
 
 // Host-only protected routes
-router.post("/", protect, hostOnly, createEvent);
+router.post("/", protect, hostOnly, upload.single('banner'), createEvent);
 router.put("/:id", protect, hostOnly, updateEvent);
 router.delete("/:id", protect, hostOnly, deleteEvent);
 

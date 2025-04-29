@@ -66,19 +66,7 @@ app.get('/api/categories', async (req, res) => {
     }
   });
   
-//   // Route to fetch all promotion videos
-  app.get('/api/promotion-videos', async (req, res) => {
-    try {
-      const videos = await Video.find();  // Querying the Video model
-      res.status(200).json(videos);       // Sending the data as JSON
-    } catch (err) {
-      res.status(500).json({ message: 'Error fetching promotion videos', error: err });
-    }
-  });
-  app.use((err, req, res, next) => {
-    console.error("Unhandled Error:", err);
-    res.status(500).json({ message: "Something went wrong!" });
-  });
+
   
   // app.use('*', (req, res) => {
   //   console.log(`Unhandled route: ${req.method} ${req.originalUrl}`);
