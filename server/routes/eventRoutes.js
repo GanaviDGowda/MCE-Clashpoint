@@ -1,6 +1,6 @@
 import express from "express";
 import upload from '../middlewares/uploadMiddleware.js';
-import mongoose from 'mongoose'; // Add this import
+import mongoose from 'mongoose';
 import {
   createEvent,
   getAllEvents,
@@ -36,7 +36,7 @@ router.get("/:id", getEventById);
 
 // Host-only protected routes
 router.post("/", protect, hostOnly, upload.single('banner'), createEvent);
-router.put("/:id", protect, hostOnly, updateEvent);
+router.put("/:id", protect, hostOnly, upload.single('banner'), updateEvent);
 router.delete("/:id", protect, hostOnly, deleteEvent);
 
 // Host can view registrations

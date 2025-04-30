@@ -64,27 +64,49 @@ export const getEventById = async (req, res) => {
 };
 
 // Update Event
+// Update Event
 export const updateEvent = async (req, res) => {
   try {
-    // If there's a new banner file uploaded, use the new URL provided by Cloudinary.
-    if (req.file) {
-      req.body.banner = req.file.path; // Cloudinary will return the file URL after upload
+    console.log('Updating event with ID:', req.params.id);
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file);
+
+    // Validate the event ID
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid event ID format' });
     }
 
-    // Find and update the event using its ID
-    const updated = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
-
-    if (!updated) {
+    // First check if the event exists
+    const eventExists = await Event.findById(req.params.id);
+    if (!eventExists) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    res.json(updated);
+    // Prepare update data
+    const updateData = { ...req.body };
+    
+    // If there's a new banner file uploaded, use the new URL provided by Cloudinary
+    if (req.file) {
+      updateData.banner = req.file.path; // Cloudinary will return the file URL after upload
+      console.log('New banner URL:', updateData.banner);
+    }
+
+    console.log('Final update data:', updateData);
+
+    // Find and update the event using its ID
+    const updated = await Event.findByIdAndUpdate(
+      req.params.id, 
+      updateData, 
+      { new: true, runValidators: true }
+    );
+
+    console.log('Event updated successfully:', updated);
+    res.status(200).json(updated);
   } catch (err) {
+    console.error('Error updating event:', err);
     res.status(500).json({ error: err.message });
   }
 };
-
-
 // Delete Event
 export const deleteEvent = async (req, res) => {
   try {

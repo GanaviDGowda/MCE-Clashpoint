@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import { FaUpload } from 'react-icons/fa'; // Import upload icon
 
 const AddEvent = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const AddEvent = () => {
   });
 
   const [bannerFile, setBannerFile] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(''); // State for preview image
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,7 +26,14 @@ const AddEvent = () => {
   };
 
   const handleFileChange = (e) => {
-    setBannerFile(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      setBannerFile(file);
+      
+      // Create a preview URL for the selected image
+      const previewURL = URL.createObjectURL(file);
+      setBannerPreview(previewURL);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -44,18 +53,23 @@ const AddEvent = () => {
     }
 
     try {
-      await api.post('/events', eventData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      await api.post('/events', eventData);
       alert('Event created successfully!');
       navigate('/host/dashboard');
     } catch (error) {
       console.error('Error creating event:', error);
-      alert('Failed to create event.');
+      alert('Failed to create event: ' + (error.response?.data?.error || error.message));
     }
   };
+
+  // Clean up the object URL when component unmounts or when a new file is selected
+  React.useEffect(() => {
+    return () => {
+      if (bannerPreview) {
+        URL.revokeObjectURL(bannerPreview);
+      }
+    };
+  }, [bannerPreview]);
 
   return (
     <div className="container mt-5">
@@ -107,9 +121,37 @@ const AddEvent = () => {
           <input type="text" name="category" className="form-control" value={formData.category} onChange={handleChange} />
         </div>
 
-        <div className="col-md-6">
+        <div className="col-12">
           <label className="form-label">Banner Image</label>
-          <input type="file" name="banner" className="form-control" onChange={handleFileChange} accept="image/*" required />
+          <div className="d-flex flex-column">
+            {bannerPreview && (
+              <div className="mb-3">
+                <img 
+                  src={bannerPreview} 
+                  alt="Banner preview" 
+                  className="img-thumbnail" 
+                  style={{ maxWidth: '300px', maxHeight: '200px' }}
+                />
+              </div>
+            )}
+            <div className="input-group">
+              <input 
+                type="file" 
+                name="banner" 
+                id="banner"
+                className="form-control" 
+                onChange={handleFileChange} 
+                accept="image/jpeg,image/png,image/jpg" 
+                required 
+              />
+              <label className="input-group-text" htmlFor="banner">
+                <FaUpload className="me-2" /> Upload
+              </label>
+            </div>
+            <small className="form-text text-muted">
+              Supported formats: JPG, PNG, JPEG
+            </small>
+          </div>
         </div>
 
         <div className="col-12">

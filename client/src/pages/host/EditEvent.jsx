@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from "../../services/api";
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaTrash } from 'react-icons/fa'; // Import trash icon
+import { FaTrash, FaUpload } from 'react-icons/fa'; // Import upload icon as well
 
 const EditEvent = () => {
-  // Change eventId to id for consistency
-  const { id } = useParams(); // Get the event ID from the URL
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [eventData, setEventData] = useState({
@@ -17,18 +16,20 @@ const EditEvent = () => {
     mode: 'online',
     link: '',
     host: '',
-    banner: '',
     additionalDetails: '',
   });
 
+  // Separate state for handling the banner file
+  const [bannerFile, setBannerFile] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState('');
   const [loading, setLoading] = useState(true);
 
   // Fetch the existing event details when the component mounts
   useEffect(() => {
     const fetchEventData = async () => {
       try {
-        console.log('Fetching event with ID:', id); // Changed from eventId to id
-        const response = await api.get(`/events/${id}`); // Changed from eventId to id
+        console.log('Fetching event with ID:', id);
+        const response = await api.get(`/events/${id}`);
         console.log('Event data received:', response.data);
         
         // Format the dates properly for the input fields
@@ -39,6 +40,12 @@ const EditEvent = () => {
         };
         
         setEventData(formattedData);
+        
+        // Set banner preview if exists
+        if (response.data.banner) {
+          setBannerPreview(response.data.banner);
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error('Error fetching event details:', error);
@@ -47,25 +54,65 @@ const EditEvent = () => {
       }
     };
     fetchEventData();
-  }, [id]); // Changed from eventId to id
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setEventData({ ...eventData, [name]: value });
   };
 
+  // Handle file selection
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setBannerFile(file);
+      // Create preview URL
+      const previewURL = URL.createObjectURL(file);
+      setBannerPreview(previewURL);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await api.put(`/events/${id}`, eventData); // Changed from eventId to id
+      console.log("Submitting form with event data:", eventData);
+      
+      // Create a FormData object to handle file upload
+      const formData = new FormData();
+      
+      // Add all event data to the form
+      Object.keys(eventData).forEach(key => {
+        if (key !== 'banner' && key !== '_id' && key !== '__v' && key !== 'createdBy') {
+          console.log(`Adding form field: ${key} = ${eventData[key]}`);
+          formData.append(key, eventData[key] || '');
+        }
+      });
+      
+      // Add the banner file if it exists
+      if (bannerFile) {
+        console.log("Adding banner file to form data:", bannerFile.name);
+        formData.append('banner', bannerFile);
+      }
+
+      // Log FormData contents (for debugging)
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
+      }
+
+      // Make the API request with FormData - don't set Content-Type manually
+      // The browser will set it automatically with the correct boundary
+      const response = await api.put(`/events/${id}`, formData);
+      
+      console.log("Update response:", response);
+      
       if (response.status === 200) {
         alert('Event updated successfully');
         navigate('/host/dashboard'); 
       }
     } catch (error) {
       console.error('Error updating event:', error);
-      alert('Failed to update event');
+      alert('Failed to update event: ' + (error.response?.data?.error || error.message));
     }
   };
 
@@ -74,7 +121,7 @@ const EditEvent = () => {
     if (!confirmDelete) return;
 
     try {
-      const response = await api.delete(`/events/${id}`); // Changed from eventId to id
+      const response = await api.delete(`/events/${id}`);
       if (response.status === 200) {
         alert('Event deleted successfully');
         navigate('/host/dashboard');
@@ -97,7 +144,7 @@ const EditEvent = () => {
           <label className="form-label">Event Name</label>
           <input
             type="text"
-            name="name"
+            name="title"
             className="form-control"
             value={eventData.title}
             onChange={handleChange}
@@ -195,14 +242,34 @@ const EditEvent = () => {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Banner (Image URL or File Path)</label>
-          <input
-            type="text"
-            name="banner"
-            className="form-control"
-            value={eventData.banner}
-            onChange={handleChange}
-          />
+          <label className="form-label">Banner Image</label>
+          <div className="d-flex flex-column">
+            {bannerPreview && (
+              <div className="mb-2">
+                <img 
+                  src={bannerPreview} 
+                  alt="Event banner preview" 
+                  style={{ maxWidth: '300px', maxHeight: '200px' }} 
+                  className="img-thumbnail" 
+                />
+              </div>
+            )}
+            <div className="input-group">
+              <input
+                type="file"
+                name="banner"
+                className="form-control"
+                onChange={handleFileChange}
+                accept="image/jpeg,image/png,image/jpg"
+              />
+              <label className="input-group-text" htmlFor="banner">
+                <FaUpload className="me-2" /> Upload
+              </label>
+            </div>
+            <small className="form-text text-muted">
+              Supported formats: JPG, PNG, JPEG
+            </small>
+          </div>
         </div>
 
         <div className="mb-3">
