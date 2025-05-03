@@ -1,5 +1,5 @@
 import express from "express";
-import upload from '../middlewares/uploadMiddleware.js';
+import { uploadEventFiles } from '../middlewares/uploadMiddleware.js';
 import mongoose from 'mongoose';
 import {
   createEvent,
@@ -9,7 +9,8 @@ import {
   deleteEvent,
   getRegisteredUsers,
   getEventsByStudent,
-  getEventByHost
+  getEventByHost,
+  getEventsWithVideos
 } from "../controllers/eventController.js";
 import { protect, hostOnly } from "../middlewares/authMiddleware.js";
 
@@ -26,6 +27,7 @@ router.use((req, res, next) => {
 
 // Public routes
 router.get("/", getAllEvents);
+router.get("/videos", getEventsWithVideos); // New route to get events with videos
 
 // Protected routes - specific paths must come before dynamic :id routes
 router.get("/host", protect, hostOnly, getEventByHost);
@@ -35,8 +37,8 @@ router.get('/student', protect, getEventsByStudent);
 router.get("/:id", getEventById);
 
 // Host-only protected routes
-router.post("/", protect, hostOnly, upload.single('banner'), createEvent);
-router.put("/:id", protect, hostOnly, upload.single('banner'), updateEvent);
+router.post("/", protect, hostOnly, uploadEventFiles, createEvent);
+router.put("/:id", protect, hostOnly, uploadEventFiles, updateEvent);
 router.delete("/:id", protect, hostOnly, deleteEvent);
 
 // Host can view registrations

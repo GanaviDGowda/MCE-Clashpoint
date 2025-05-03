@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card } from 'react-bootstrap';
-import { Link } from 'react-router-dom'; // 🔁 Added for navigation
+import { Container, Row, Col, Card, Spinner } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import './Home.css';
-import api from "../services/api";
+import api from '../services/api';
 
 import heroBackground from '../assets/hero-banner.jpg';
 import eventLogo from '../assets/event-logo.png';
@@ -21,19 +21,43 @@ const categoryImages = {
 
 const Home = () => {
   const [events, setEvents] = useState([]);
+  const [promotionVideos, setPromotionVideos] = useState([]);
+  const [loading, setLoading] = useState({ events: true, videos: true });
+  const [muted, setMuted] = useState(true); // Track the mute state
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await api.get('http://localhost:5000/api/events');
+        setLoading((prev) => ({ ...prev, events: true }));
+        const res = await api.get('/events');
         setEvents(res.data || []);
       } catch (error) {
         console.error('Error fetching events:', error);
+      } finally {
+        setLoading((prev) => ({ ...prev, events: false }));
+      }
+    };
+
+    const fetchVideos = async () => {
+      try {
+        setLoading((prev) => ({ ...prev, videos: true }));
+        const res = await api.get('/events/videos');
+        setPromotionVideos(res.data || []);
+      } catch (error) {
+        console.error('Error fetching event videos:', error);
+      } finally {
+        setLoading((prev) => ({ ...prev, videos: false }));
       }
     };
 
     fetchEvents();
+    fetchVideos();
   }, []);
+
+  // Toggle mute state
+  const handleMuteToggle = () => {
+    setMuted(!muted);
+  };
 
   return (
     <div>
@@ -57,15 +81,10 @@ const Home = () => {
       <Container className="my-5">
         <h3 className="text-center mb-4">Browse by Category</h3>
         <Row className="justify-content-center text-center">
-          {['Seminar', 'Workshop', 'Tech Events', 'Non-Tech Events'].map((cat, index) => (
+          {Object.keys(categoryImages).map((cat, index) => (
             <Col xs={6} md={3} key={index} className="mb-4">
               <Card className="category-card h-100 shadow-sm">
-                <Card.Img
-                  variant="top"
-                  src={categoryImages[cat]}
-                  alt={cat}
-                  className="p-3"
-                />
+                <Card.Img variant="top" src={categoryImages[cat]} alt={cat} className="p-3" />
                 <Card.Body>
                   <Card.Title>{cat}</Card.Title>
                 </Card.Body>
@@ -78,46 +97,98 @@ const Home = () => {
       {/* Event Promotion Videos */}
       <Container className="my-5">
         <h3 className="text-center mb-4">Event Promotion Videos</h3>
-        <Row className="justify-content-center">
-          {[1, 2, 3].map((item) => (
-            <Col xs={12} md={4} key={item} className="mb-4">
-              <Card className="video-card text-center shadow-sm">
-                <div className="video-thumbnail d-flex justify-content-center align-items-center">
-                  <img src={playIcon} alt="Play Icon" width={40} />
-                </div>
-                <Card.Body>
-                  <Card.Title>Event Promotion Video</Card.Title>
-                  <Card.Text>event description</Card.Text>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
+        {loading.videos ? (
+          <div className="text-center py-5">
+            <Spinner animation="border" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </Spinner>
+          </div>
+        ) : promotionVideos.length > 0 ? (
+          <Row className="justify-content-center">
+            {promotionVideos.map((event) => (
+              <Col xs={12} md={4} key={event._id} className="mb-4">
+                <Link to={`/events/${event._id}`} className="text-decoration-none text-dark">
+                  <Card className="video-card text-center shadow-sm h-100">
+                    <div className="video-container">
+                      {event.videos && event.videos[0] ? (
+                        <video
+                          className="video-preview"
+                          src={event.videos[0]}
+                          poster={event.banner || eventLogo}
+                          autoPlay
+                          loop
+                          muted={muted} // Apply mute state here
+                          playsInline
+                          onError={() => {
+                            console.error('Error loading video');
+                          }}
+                        />
+                      ) : (
+                        <div className="video-thumbnail d-flex justify-content-center align-items-center">
+                          <img src={playIcon} alt="Play Icon" width={40} />
+                        </div>
+                      )}
+                    </div>
+                    <Card.Body>
+                      <Card.Title>{event.title}</Card.Title>
+                      <Card.Text className="text-muted">
+                        By {event.createdBy?.name || 'Unknown Host'}
+                      </Card.Text>
+                    </Card.Body>
+                  </Card>
+                </Link>
+              </Col>
+            ))}
+          </Row>
+        ) : (
+          <div className="text-center py-4">
+            <p>No promotion videos are available at the moment.</p>
+          </div>
+        )}
       </Container>
 
-      {/* Explore Slider Section */}
+      {/* Mute Button */}
+      <div className="text-center my-4">
+        <button onClick={handleMuteToggle} className="btn btn-primary">
+          {muted ? 'Unmute' : 'Mute'}
+        </button>
+      </div>
+
+      {/* Explore Section */}
       <Container fluid className="my-5 px-4">
         <h3 className="text-center mb-4">Explore</h3>
-        <div className="explore-slider d-flex overflow-auto pb-3">
-          {events.map((event) => (
-            <Link
-              to={`/events/${event._id}`}
-              key={event._id}
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
-              <Card className="me-3 shadow-sm flex-shrink-0 explore-card">
-                <Card.Img
-                  variant="top"
-                  src={event.banner || eventLogo}
-                  alt={event.name}
-                />
-                <Card.Body>
-                  <Card.Title className="text-center">{event.title}</Card.Title>
-                </Card.Body>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        {loading.events ? (
+          <div className="text-center py-5">
+            <Spinner animation="border" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </Spinner>
+          </div>
+        ) : events.length > 0 ? (
+          <div className="explore-slider d-flex overflow-auto pb-3">
+            {events.map((event) => (
+              <Link
+                to={`/events/${event._id}`}
+                key={event._id}
+                className="text-decoration-none text-dark"
+              >
+                <Card className="me-3 shadow-sm flex-shrink-0 explore-card">
+                  <Card.Img
+                    variant="top"
+                    src={event.banner || eventLogo}
+                    alt={event.title}
+                  />
+                  <Card.Body>
+                    <Card.Title className="text-center">{event.title}</Card.Title>
+                  </Card.Body>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-4">
+            <p>No events are available at the moment.</p>
+          </div>
+        )}
       </Container>
     </div>
   );

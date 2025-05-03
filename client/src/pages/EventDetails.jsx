@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
 import api from "../services/api";
 import { useParams, Link } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext'; // import context
-import { Button, Card, ListGroup, Badge } from 'react-bootstrap';
+import { AuthContext } from '../context/AuthContext';
+import { Button, Card, ListGroup, Badge, Row, Col } from 'react-bootstrap';
 import { MapPin, Calendar, Globe } from 'lucide-react';
 import eventLogo from '../assets/event-logo.png';
 
 const EventDetails = () => {
   const { id } = useParams();
-  const { user } = useContext(AuthContext); // get current user
+  const { user } = useContext(AuthContext);
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isRegistered, setIsRegistered] = useState(false);
@@ -90,7 +90,7 @@ const EventDetails = () => {
             {event.description}
           </Card.Text>
 
-          <ListGroup variant="flush">
+          <ListGroup variant="flush" className="mb-4">
             <ListGroup.Item>
               <strong>📅 Registration Deadline:</strong>{' '}
               {new Date(event.registrationEndDate).toLocaleDateString()}
@@ -112,7 +112,7 @@ const EventDetails = () => {
 
           {/* Show Register button only if user is a student */}
           {user?.role === 'student' && (
-            <div className="d-grid gap-2 mt-4">
+            <div className="d-grid gap-2 mt-3">
               {isRegistered ? (
                 <Button variant="success" disabled>
                   ✅ Already Registered
@@ -121,6 +121,49 @@ const EventDetails = () => {
                 <Button variant="primary" onClick={handleRegister}>
                   🚀 Register Now
                 </Button>
+              )}
+            </div>
+          )}
+
+          {/* Media Section */}
+          {(event.images?.length || event.videos?.length) && (
+            <div className="mt-5">
+              <h5>📸 Media Gallery</h5>
+
+
+              {/* Images */}
+{event.photos?.length > 0 && (
+  <Row className="mt-3">
+    {event.photos.map((imgUrl, index) => (
+      <Col xs={6} md={4} key={`img-${index}`} className="mb-3">
+        <img
+          src={imgUrl}
+          alt={`Event Image ${index + 1}`}
+          className="img-fluid rounded shadow-sm"
+          style={{ maxHeight: '200px', objectFit: 'cover', width: '100%' }}
+        />
+      </Col>
+    ))}
+  </Row>
+)}
+
+
+              {/* Videos */}
+              {event.videos?.length > 0 && (
+                <Row className="mt-3">
+                  {event.videos.map((videoUrl, index) => (
+                    <Col xs={12} key={`vid-${index}`} className="mb-4">
+                      <video
+                        src={videoUrl}
+                        controls
+                        className="w-100 rounded shadow-sm"
+                        style={{ maxHeight: '400px' }}
+                      >
+                        Your browser does not support the video tag.
+                      </video>
+                    </Col>
+                  ))}
+                </Row>
               )}
             </div>
           )}
