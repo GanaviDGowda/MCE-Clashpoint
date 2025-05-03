@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import api from "../services/api";
 import { useParams, Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext'; // import context
 import { Button, Card, ListGroup, Badge } from 'react-bootstrap';
-import { MapPin, Calendar, Globe, Users, Info } from 'lucide-react';
-import eventLogo from '../assets/event-logo.png'; // Placeholder for event logo
+import { MapPin, Calendar, Globe } from 'lucide-react';
+import eventLogo from '../assets/event-logo.png';
 
 const EventDetails = () => {
   const { id } = useParams();
+  const { user } = useContext(AuthContext); // get current user
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isRegistered, setIsRegistered] = useState(false);
@@ -40,7 +42,7 @@ const EventDetails = () => {
 
   const handleRegister = async () => {
     try {
-      const response = await api.post(`/registrations/${id}`);
+      await api.post(`/registrations/${id}`);
       setIsRegistered(true);
       alert('Successfully registered for the event!');
     } catch (error) {
@@ -52,13 +54,14 @@ const EventDetails = () => {
   if (loading) return <div className="text-center mt-5">Loading event details...</div>;
   if (!event) return <div className="text-center mt-5">Event not found</div>;
 
+  const dashboardLink = user?.role === 'host' ? '/host/dashboard' : '/student/dashboard';
+
   return (
     <div className="container mt-5 mb-5" style={{ maxWidth: "800px" }}>
       <Card className="shadow rounded-4 border-0 overflow-hidden">
         <Card.Img
           variant="top"
-          //src={event.banner || eventLogo}
-          src={eventLogo}
+          src={event.banner || eventLogo}
           alt="Event Banner"
           style={{ maxHeight: "300px", objectFit: "cover" }}
         />
@@ -107,22 +110,25 @@ const EventDetails = () => {
             )}
           </ListGroup>
 
-          <div className="d-grid gap-2 mt-4">
-            {isRegistered ? (
-              <Button variant="success" disabled>
-                ✅ Already Registered
-              </Button>
-            ) : (
-              <Button variant="primary" onClick={handleRegister}>
-                🚀 Register Now
-              </Button>
-            )}
-          </div>
+          {/* Show Register button only if user is a student */}
+          {user?.role === 'student' && (
+            <div className="d-grid gap-2 mt-4">
+              {isRegistered ? (
+                <Button variant="success" disabled>
+                  ✅ Already Registered
+                </Button>
+              ) : (
+                <Button variant="primary" onClick={handleRegister}>
+                  🚀 Register Now
+                </Button>
+              )}
+            </div>
+          )}
         </Card.Body>
       </Card>
 
       <div className="text-center mt-4">
-        <Link to="/student/dashboard" className="btn btn-outline-primary me-2">
+        <Link to={dashboardLink} className="btn btn-outline-primary me-2">
           ← Back to Dashboard
         </Link>
         <Link to="/events" className="btn btn-outline-secondary">
