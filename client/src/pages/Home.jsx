@@ -23,7 +23,6 @@ const Home = () => {
   const [events, setEvents] = useState([]);
   const [promotionVideos, setPromotionVideos] = useState([]);
   const [loading, setLoading] = useState({ events: true, videos: true });
-  const [muted, setMuted] = useState(true); // Track the mute state
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -53,11 +52,6 @@ const Home = () => {
     fetchEvents();
     fetchVideos();
   }, []);
-
-  // Toggle mute state
-  const handleMuteToggle = () => {
-    setMuted(!muted);
-  };
 
   return (
     <div>
@@ -117,7 +111,7 @@ const Home = () => {
                           poster={event.banner || eventLogo}
                           autoPlay
                           loop
-                          muted={muted} // Apply mute state here
+                          muted
                           playsInline
                           onError={() => {
                             console.error('Error loading video');
@@ -146,13 +140,6 @@ const Home = () => {
           </div>
         )}
       </Container>
-
-      {/* Mute Button */}
-      <div className="text-center my-4">
-        <button onClick={handleMuteToggle} className="btn btn-primary">
-          {muted ? 'Unmute' : 'Mute'}
-        </button>
-      </div>
 
       {/* Explore Section */}
       <Container fluid className="my-5 px-4">

@@ -1,52 +1,45 @@
-// Protect middleware (check for JWT token)
+// middleware/authMiddleware.js
+
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
 
-
+// Middleware to protect routes with JWT
 export const protect = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    console.log("Auth header:", authHeader); // Debug log
-     // Debug log
-     
-    if (!authHeader || !authHeader.startsWith('Bearer')) {
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'Unauthorized: No token provided' });
     }
 
     const token = authHeader.split(' ')[1];
-    
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Decoded token:", decoded); // Debug log  
-    
-    // Make sure we're using 'id' not 'userId'
-    const user = await User.findById(decoded.id).select('-password');
-    console.log("Found user:", user); // Debug log
 
+    // Use "id" as payload field
+    const user = await User.findById(decoded.id).select('-password');
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized: User not found' });
     }
 
-    req.user = user;
+    req.user = user; // Attach user to request
     next();
   } catch (err) {
-    console.error("JWT error:", err.message);
+    console.error("Auth error:", err.message);
     return res.status(401).json({ message: 'Unauthorized: Invalid or expired token' });
   }
 };
 
-// Host-only middleware (check if the user role is 'host')
+// Middleware to allow only hosts
 export const hostOnly = (req, res, next) => {
-  
-  if (req.user.role !== 'host') {
+  if (!req.user || req.user.role !== 'host') {
     return res.status(403).json({ message: 'Access denied: Hosts only' });
   }
-  console.log
   next();
 };
 
-// Student-only middleware (check if the user role is 'student')
+// Middleware to allow only students
 export const studentOnly = (req, res, next) => {
-  if (req.user.role !== 'student') {
+  if (!req.user || req.user.role !== 'student') {
     return res.status(403).json({ message: 'Access denied: Students only' });
   }
   next();

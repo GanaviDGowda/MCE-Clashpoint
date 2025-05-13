@@ -47,6 +47,10 @@ app.use('/api', apiRoutes); // Import and use the API routes
 // // Other routes for different APIs
 app.use('/api/auth', authRoutes);
 
+
+app.use('/api/attendance', attendanceRoutes);
+
+
 console.log("Setting up event routes...");
 app.use('/api/events', eventRoutes);
 console.log("Event routes configured");

@@ -1,60 +1,60 @@
-import { Attendance } from '../models/Attendance.js';
-import { generateQRCode } from '../utils/qrCodeGenerator.js';
+import { verifyQRToken } from '../utils/qrTokenUtils.js';
+import Attendance from '../models/Attendance.js';
+import {Registration} from '../models/Registration.js';
 
-// Mark attendance for the student
 export const markAttendance = async (req, res) => {
   try {
-    const { eventId } = req.params;
-    const studentId = req.user.id;  // Get student ID from JWT token
+    const { qrToken } = req.body;
+    const userId = req.user.id;
+    
+    if (!qrToken) {
+      return res.status(400).json({ error: 'QR token is required' });
+    }
 
-    // Check if the student has already marked attendance for this event
-    const existingAttendance = await Attendance.findOne({ studentID: studentId, eventID: eventId });
+    const eventId = verifyQRToken(qrToken);
+    if (!eventId) {
+      return res.status(400).json({ error: 'Invalid or expired QR code' });
+    }
+
+    // Check if user is registered for this event
+    const registration = await Registration.findOne({ 
+      user: userId,
+      event: eventId 
+    });
+    
+    if (!registration) {
+      return res.status(403).json({ 
+        error: 'You must be registered for this event to mark attendance' 
+      });
+    }
+
+    // Check if attendance already marked
+    const existingAttendance = await Attendance.findOne({ 
+      event: eventId, 
+      user: userId 
+    });
+    
     if (existingAttendance) {
-      return res.status(400).json({ message: "Attendance already marked for this event." });
+      return res.status(409).json({ 
+        message: 'Your attendance has already been recorded for this event' 
+      });
     }
 
-    // Mark the attendance
-    const attendance = new Attendance({
-      studentID: studentId,
-      eventID: eventId,
-      attendanceTime: new Date(),
+    // Create new attendance record
+    const attendance = new Attendance({ 
+      user: userId, 
+      event: eventId, 
+      attendedAt: new Date() 
     });
+    
     await attendance.save();
-
-    // Generate QR code for the student
-    const qrCodeData = `https://attendance.mceclashpoint.com/attendance?id=${studentId}&event=${eventId}`;
-    const qrCodePath = await generateQRCode(qrCodeData, `generated_qrcodes/attendance_${studentId}_${eventId}.png`);
-
-    // Respond with the QR code path and success message
-    res.status(201).json({
-      message: "Attendance marked successfully.",
-      qrCodePath,
+    
+    res.status(200).json({ 
+      success: true,
+      message: 'Attendance marked successfully' 
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error marking attendance." });
-  }
-};
-
-// Check if a student attended the event
-export const checkAttendance = async (req, res) => {
-  try {
-    const { eventId, studentId } = req.params;
-
-    // Find the attendance record for the given student and event
-    const attendance = await Attendance.findOne({ studentID: studentId, eventID: eventId });
-
-    if (!attendance) {
-      return res.status(404).json({ message: "Attendance not found for this student." });
-    }
-
-    // Respond with attendance details
-    res.status(200).json({
-      message: "Attendance found.",
-      attendanceTime: attendance.attendanceTime,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error fetching attendance." });
+    console.error('Error marking attendance:', error);
+    res.status(500).json({ error: 'Failed to mark attendance' });
   }
 };

@@ -1,11 +1,23 @@
-import express from "express";
-import { markAttendance, checkAttendance } from "../controllers/attendanceController.js";
-import { protect,studentOnly } from "../middlewares/authMiddleware.js";
+import express from 'express';
+import { markAttendance } from '../controllers/attendanceController.js';
+import { refreshEventQRCode } from '../utils/qrTokenUtils.js';
+import { protect, hostOnly } from '../middlewares/authMiddleware.js';
 
 
 const router = express.Router();
 
-router.post("/:eventId", protect, studentOnly, markAttendance);
-router.get("/:eventId/:studentId", protect, checkAttendance);
+
+// Add this route - this provides the QR token that the frontend is requesting
+router.get('/qr/:eventId', protect, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const token = await refreshEventQRCode(eventId);
+    res.json({ qrToken: token });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to generate QR token' });
+  }
+});
+
+router.post('/mark', protect, markAttendance);
 
 export default router;

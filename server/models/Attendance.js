@@ -1,23 +1,14 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const attendanceSchema = new mongoose.Schema({
-  studentId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
+  event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  attendedAt: { type: Date, default: Date.now },
+}, {
+  timestamps: true
+});
 
-  },
-  eventId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Event', required: 
-    true 
+// Add the compound index with unique constraint
+attendanceSchema.index({ event: 1, user: 1 }, { unique: true });
 
-  },
-  attendanceTime: { 
-    type: Date, 
-    default: Date.now 
-
-  }
-}, { timestamps: true });
-
-export const Attendance = mongoose.model("Attendance", attendanceSchema);
+export default mongoose.model('Attendance', attendanceSchema);

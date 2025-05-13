@@ -5,6 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 import { Button, Card, ListGroup, Badge, Row, Col } from 'react-bootstrap';
 import { MapPin, Calendar, Globe } from 'lucide-react';
 import eventLogo from '../assets/event-logo.png';
+import EventQRCodeDisplayPage from './host/EventQRDisplayPage';
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -12,6 +13,19 @@ const EventDetails = () => {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isRegistered, setIsRegistered] = useState(false);
+  // Move the state outside of useEffect
+  const [scanSuccess, setScanSuccess] = useState(false);
+
+  // Move the handler function outside of useEffect
+  const handleScanSuccess = async (qrToken) => {
+    try {
+      await api.post('/api/attendance/mark', { qrToken, eventId: id });
+      setScanSuccess(true);
+      alert('Attendance marked successfully!');
+    } catch (error) {
+      alert('Failed to mark attendance: ' + (error.response?.data?.error || 'Server error'));
+    }
+  };
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -84,6 +98,22 @@ const EventDetails = () => {
               {event.venue || "Venue Not Specified"}
             </Badge>
           </div>
+          {user?.role === 'host' && (
+            <div className="mb-4">
+              <strong>Event QR Code:</strong> <br />
+              <EventQRCodeDisplayPage eventId={event._id} eventName={event.title} />
+            </div>
+          )}
+
+          {user?.role === 'student' && isRegistered && (
+            <div className="mt-4">
+              <h4>Mark Attendance</h4>
+              <p>To mark your attendance, scan the QR code provided by the event host.</p>
+              <Link to={`/events/${event._id}/attendance`} className="btn btn-primary">
+                Open QR Scanner
+              </Link>
+            </div>
+          )}
 
           <Card.Text className="mb-4">
             <strong>Description:</strong> <br />
@@ -126,27 +156,25 @@ const EventDetails = () => {
           )}
 
           {/* Media Section */}
-          {(event.images?.length || event.videos?.length) && (
+          {(event.photos?.length || event.videos?.length) && (
             <div className="mt-5">
               <h5>📸 Media Gallery</h5>
 
-
-              {/* Images */}
-{event.photos?.length > 0 && (
-  <Row className="mt-3">
-    {event.photos.map((imgUrl, index) => (
-      <Col xs={6} md={4} key={`img-${index}`} className="mb-3">
-        <img
-          src={imgUrl}
-          alt={`Event Image ${index + 1}`}
-          className="img-fluid rounded shadow-sm"
-          style={{ maxHeight: '200px', objectFit: 'cover', width: '100%' }}
-        />
-      </Col>
-    ))}
-  </Row>
-)}
-
+              {/* photos */}
+              {event.photos?.length > 0 && (
+                <Row className="mt-3">
+                  {event.photos.map((imgUrl, index) => (
+                    <Col xs={6} md={4} key={`img-${index}`} className="mb-3">
+                      <img
+                        src={imgUrl}
+                        alt={`Event Image ${index + 1}`}
+                        className="img-fluid rounded shadow-sm"
+                        style={{ maxHeight: '200px', objectFit: 'cover', width: '100%' }}
+                      />
+                    </Col>
+                  ))}
+                </Row>
+              )}
 
               {/* Videos */}
               {event.videos?.length > 0 && (

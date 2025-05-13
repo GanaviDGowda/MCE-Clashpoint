@@ -48,7 +48,15 @@ const eventSchema = new mongoose.Schema({
   }, // host ID
   additionalDetails: {
     type: String
-  }
+  },
+  participants: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User' 
+  }],
+    qrExpiry: { 
+      type: Date, 
+      default: Date.now 
+    }
 }, { timestamps: true });
 
 export const Event = mongoose.model("Event", eventSchema);
