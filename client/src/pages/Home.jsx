@@ -71,22 +71,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Browse by Category */}
-      <Container className="my-5">
-        <h3 className="text-center mb-4">Browse by Category</h3>
-        <Row className="justify-content-center text-center">
-          {Object.keys(categoryImages).map((cat, index) => (
-            <Col xs={6} md={3} key={index} className="mb-4">
-              <Card className="category-card h-100 shadow-sm">
-                <Card.Img variant="top" src={categoryImages[cat]} alt={cat} className="p-3" />
-                <Card.Body>
-                  <Card.Title>{cat}</Card.Title>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </Container>
+      
 
       {/* Event Promotion Videos */}
       <Container className="my-5">

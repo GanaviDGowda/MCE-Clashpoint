@@ -22,7 +22,9 @@ import AddEvent from './pages/host/AddEvent';
 import EditEvent from './pages/host/EditEvent';
 import ParticipantList from './pages/host/ParticipantsList';
 import EventQRCodePage from './pages/host/EventQRDisplayPage';
-// import ReportUploader from './pages/host/ReportUploader';
+
+// Optional: Separate review page, if ever needed
+// import ReviewPage from './pages/ReviewPage';
 
 const AppRoutes = () => (
   <Routes>
@@ -30,21 +32,26 @@ const AppRoutes = () => (
     <Route path="/" element={<Home />} />
     <Route path="/events" element={<Events />} />
     <Route path="/events/:id" element={<EventDetails />} />
+    {/* If review listing/editing ever gets separate page: */}
+    {/* <Route path="/events/:id/reviews" element={<ReviewPage />} /> */}
+
+    {/* Auth */}
     <Route path="/register" element={<Register />} />
     <Route path="/login" element={<Login />} />
-    
-    {/* Student Routes with properly declared components */}
+
+    {/* Student */}
+    <Route path="/student/dashboard" element={<StudentDashboard />} />
     <Route path="/events/:eventId/attendance" element={<EventAttendancePage />} />
     <Route path="/attendance-confirmation" element={<AttendanceConfirmationPage />} />
-    <Route path="/student/dashboard" element={<StudentDashboard />} />
 
-    {/* Host Routes */}
+    {/* Host */}
     <Route path="/host/dashboard" element={<HostDashboard />} />
     <Route path="/host/add-event" element={<AddEvent />} />
     <Route path="/host/edit-event/:id" element={<EditEvent />} />
     <Route path="/host/event/:eventId" element={<EventQRCodePage />} />
-    
-    {/* Fallback for 404 errors */}
+    {/* <Route path="/host/event/:eventId/participants" element={<ParticipantList />} /> */}
+
+    {/* 404 */}
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
