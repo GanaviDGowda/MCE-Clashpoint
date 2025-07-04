@@ -33,4 +33,4 @@ cron.schedule('* * * * *', async () => {
   } catch (error) {
     console.error('Error in QR code refresh scheduler:', error);
   }
-});
+});; l
